@@ -34,7 +34,10 @@ FoldChange=function(data,group,fold=1.1){
   ## then merge the mean column with dataset for t-test calculation
   #MeanPos=as.matrix(apply(Pos,1,mean))
   #MeanNeg=as.matrix(apply(Neg,1,mean))
-  
+  ## Get the fold change, only select Fold Change >1.1 for each disease 
+  ## then merge the mean column with dataset for t-test calculation
+  #MeanPos=as.matrix(apply(Pos,1,mean))
+  #MeanNeg=as.matrix(apply(Neg,1,mean))
   MeanPos=apply(Pos,1,mean)
   MeanNeg=apply(Neg,1,mean)
   FoldChange=MeanPos/MeanNeg
