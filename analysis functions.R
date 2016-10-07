@@ -34,10 +34,7 @@ FoldChange=function(data,group,fold=1.1){
   ## then merge the mean column with dataset for t-test calculation
   #MeanPos=as.matrix(apply(Pos,1,mean))
   #MeanNeg=as.matrix(apply(Neg,1,mean))
-  ## Get the fold change, only select Fold Change >1.1 for each disease 
-  ## then merge the mean column with dataset for t-test calculation
-  #MeanPos=as.matrix(apply(Pos,1,mean))
-  #MeanNeg=as.matrix(apply(Neg,1,mean))
+  
   MeanPos=apply(Pos,1,mean)
   MeanNeg=apply(Neg,1,mean)
   FoldChange=MeanPos/MeanNeg
@@ -86,16 +83,16 @@ FastTtest=function(data,group) {
 # data need to be one sample each columnm, class as column name
 # AnalyzeClass section ask which classes to use in feature selection 
 # can be like===c("Den","Mal","Syp")
-FeatureSelection=function(dataset,AnalyzeClass,FoldChange=TRUE,cutoff){
-
+FeatureSelection=function(dataset,AnalyzeClass,FoldCheck=TRUE,cutoff){
+  
   ########
   ## checking inputs
   if (missing(AnalyzeClass)){
     print("AnalyzeClass not specified, using all classes in dataset for analysis")
-    AnalyzeClass=unique(colnames(data))
+    AnalyzeClass=unique(colnames(dataset))
   }
   if (missing(cutoff)){
-    cutoff=nrow(data)
+    cutoff=1/nrow(dataset)
   }
   ########
   
@@ -107,12 +104,12 @@ FeatureSelection=function(dataset,AnalyzeClass,FoldChange=TRUE,cutoff){
     group=which( colnames(Selected)==x )## get the col.number by col.name
     
     ##Calculate fold change to select significant peptides if needed
-    if(FoldChange==TRUE){
+    if(FoldCheck==TRUE){
       TTestInput=FoldChange(Selected,group)
     } else {TTestInput=Selected}
     #continue to calculate ttest and add to matrix
     pval=FastTtest(data=TTestInput,group=group)
-  
+    
     CombinePval<-cbind(TTestInput,pval)
     # sort by p value
     SortbyPval=CombinePval[order(CombinePval[,'pval'],decreasing = FALSE),]
@@ -122,7 +119,7 @@ FeatureSelection=function(dataset,AnalyzeClass,FoldChange=TRUE,cutoff){
     if(nrow(SigPep)>100){
       SigPep=SigPep[1:100,]
     }
-    SigPep=subset(SigPep,select=-pval)
+    SigPep=SigPep[,-ncol(SigPep),drop=FALSE]##subset(SigPep,select=-pval)
     #SigPep=cbind(SigPep,source=x)
     SigPep
   })
@@ -131,6 +128,13 @@ FeatureSelection=function(dataset,AnalyzeClass,FoldChange=TRUE,cutoff){
 }
 
 
+########################################
+########################################
+## Real k fold cross validation
+########################################
+# data need to be one sample each columnm, class as column name
+# AnalyzeClass section ask which classes to use in feature selection 
+# can be like===c("Den","Mal","Syp")
 
 ## True k-fold cross validation that split dataset into training and testing first then do feature selection
 ## need to run function FeatureSelection first, it is used in this function
@@ -147,7 +151,7 @@ CrossValidationR=function(dataset,fold,AnalyzeClass){
   library(e1071)
   ## select samples in the to be analyzed classes
   dataset=dataset[, colnames(dataset) %in% AnalyzeClass]## 
-
+  
   #Randomly shuffle the data
   dataset<-dataset[,sample(ncol(dataset))]
   
@@ -195,21 +199,5 @@ CrossValidationR=function(dataset,fold,AnalyzeClass){
   CrossValResult=Reduce("+",CrossValOut)
 }
 
-## get the input
-input<-read.table("G:\\OneDrive\\experiments\\common disease signature\\new infections\\all ready delete bad samples.txt",header=F,sep = "	")#class in row 1, row names is peptide
-data=LoadingData(input)
-
-
-
-#specify the classese to be analyzed
-#AnalyzeClass=c("Bor","Cha","Den","Flu","Hep","HIV","Lym","Mal","Syp","Tub","Val","Wnv","ND")#ask which classes to use in feature selection
-AnalyzeClass=c("Bor","Den","Syp")#ask which classes to use in feature selection
-
-
-## calculate run time
-ptm <- proc.time()
-###code
-matrix=CrossValidationR(data,10,AnalyzeClass)
-proc.time() - ptm
 
 
