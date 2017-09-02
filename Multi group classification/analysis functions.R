@@ -204,12 +204,5 @@ data=LoadingData(input)
 #specify the classese to be analyzed
 #AnalyzeClass=c("Bor","Cha","Den","Flu","Hep","HIV","Lym","Mal","Syp","Tub","Val","Wnv","ND")#ask which classes to use in feature selection
 AnalyzeClass=c("HSA","ND")#ask which classes to use in feature selection
-
-
-## calculate run time
-ptm <- proc.time()
-###code
 matrix=CrossValidationR(data,10,AnalyzeClass)
-proc.time() - ptm
-matrix
-
+print(matrix)
